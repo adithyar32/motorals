@@ -2,7 +2,6 @@ package com.motorals.motorals_backend.Config;
 
 import com.motorals.motorals_backend.Security.CustomUserDetailsService;
 import com.motorals.motorals_backend.Security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
