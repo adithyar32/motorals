@@ -22,10 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         com.motorals.motorals_backend.Entity.User appUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return new User(
+        return new org.springframework.security.core.userdetails.User(
                 appUser.getEmail(),
                 appUser.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + appUser.getRole().name()))
+                Collections.singletonList(new SimpleGrantedAuthority(appUser.getRole().name()))
         );
     }
 }
