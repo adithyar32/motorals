@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -12,8 +13,9 @@ import java.time.LocalDate;
 public class BookingDTO {
     private Long id;
     private Long userId;
-    private Long bikeId;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private String bikeModel;
+    private String registrationNumber;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private String status;
 }

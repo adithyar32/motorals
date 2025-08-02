@@ -9,9 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BikeDTO {
     private Long id;
-    private String name;
+    private String brand;
     private String model;
-    private String imageUrl;   // or use byte[] if inline image
-    private String category;
+    private String registrationNumber;
     private boolean available;
+    private double pricePerHour;
+    private String category;
+    private String imageUrl;
 }

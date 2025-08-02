@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -28,4 +29,11 @@ public class Bike {
 
     @OneToMany(mappedBy = "bike",cascade = CascadeType.ALL)
     private List<Booking> bookings;
+
+    @Column(length = 500)
+    private String imageUrl;
+
+    public String getName() {
+        return brand + " " + model;
+    }
 }
