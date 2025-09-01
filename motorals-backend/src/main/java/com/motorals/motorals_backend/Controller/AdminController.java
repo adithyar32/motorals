@@ -6,11 +6,16 @@ import com.motorals.motorals_backend.Entity.Bike;
 import com.motorals.motorals_backend.Entity.Category;
 import com.motorals.motorals_backend.Repository.BikeRepository;
 import com.motorals.motorals_backend.Repository.CategoryRepository;
+import com.motorals.motorals_backend.Service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -19,6 +24,7 @@ public class AdminController {
 
     private final BikeRepository bikeRepository;
     private final CategoryRepository categoryRepository;
+    private final CloudinaryService cloudinaryService;
 
     //admin dashboard
     @GetMapping("/dashboard")
@@ -28,8 +34,11 @@ public class AdminController {
     }
 
     //adding of a bike
-    @PostMapping("/bikes")
-    public ResponseEntity<String> addBike(@RequestBody BikeDTO bikeDTO) {
+    @PostMapping(value = "/bikes", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<String> addBike(
+            @RequestPart("bike") BikeDTO bikeDTO,
+            @RequestPart("file") MultipartFile imageFile) throws IOException {
+
         Category category = categoryRepository.findByName(bikeDTO.getCategory())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -40,12 +49,22 @@ public class AdminController {
         bike.setAvailable(true);
         bike.setPricePerHour(bikeDTO.getPricePerHour());
         bike.setCategory(category);
-        bike.setImageUrl(bikeDTO.getImageUrl());
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Upload file to Cloudinary
+            Map uploadResult = cloudinaryService.uploadFile(imageFile);
+            bike.setImageUrl((String) uploadResult.get("url"));           // save Cloudinary URL
+            bike.setImagePublicId((String) uploadResult.get("public_id")); // save Cloudinary publicId
+        }
+        else {
+            throw new RuntimeException("Either an image file or image URL must be provided");
+        }
 
         bikeRepository.save(bike);
 
         return ResponseEntity.ok("Bike added successfully");
     }
+
 
     //get a single bike by id
     @GetMapping("/bikes/{id}")
@@ -62,6 +81,7 @@ public class AdminController {
                 bike.isAvailable(),
                 bike.getPricePerHour(),
                 bike.getImageUrl(),
+                bike.getImagePublicId(),
                 bike.getCategory().getName()
         );
         return ResponseEntity.ok(bikeDTO);

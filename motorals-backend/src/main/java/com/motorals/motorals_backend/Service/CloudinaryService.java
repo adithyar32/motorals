@@ -17,7 +17,9 @@ public class CloudinaryService {
 
     public Map uploadFile(MultipartFile file) throws IOException {
         return cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "auto"));
+                ObjectUtils.asMap("resource_type", "auto",
+                        "upload_preset", "motorals_upload"
+                ));
     }
 
     public Map deleteFile(String publicId) throws IOException {

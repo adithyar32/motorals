@@ -16,4 +16,5 @@ public class BikeDTO {
     private double pricePerHour;
     private String category;
     private String imageUrl;
+    private String imagePublicId;
 }

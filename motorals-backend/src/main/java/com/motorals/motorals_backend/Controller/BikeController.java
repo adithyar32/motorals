@@ -32,7 +32,8 @@ public class BikeController {
                         bike.isAvailable(),
                         bike.getPricePerHour(),
                         bike.getCategory().getName(),
-                        bike.getImageUrl()
+                        bike.getImageUrl(),
+                        bike.getImagePublicId()
                 )).toList();
 
         return ResponseEntity.ok(bikes);
@@ -77,7 +78,8 @@ public class BikeController {
                         bike.isAvailable(),
                         bike.getPricePerHour(),
                         bike.getCategory().getName(),
-                        bike.getImageUrl()
+                        bike.getImageUrl(),
+                        bike.getImagePublicId()
                 )).toList();
 
         return ResponseEntity.ok(bikes);

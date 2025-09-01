@@ -33,6 +33,8 @@ public class Bike {
     @Column(length = 500)
     private String imageUrl;
 
+    private String imagePublicId;
+
     public String getName() {
         return brand + " " + model;
     }
