@@ -1,21 +1,29 @@
 package com.motorals.motorals_backend.Controller;
 
 import com.motorals.motorals_backend.DTO.BikeDTO;
+import com.motorals.motorals_backend.DTO.BookingDTO;
 import com.motorals.motorals_backend.DTO.CategoryDTO;
+import com.motorals.motorals_backend.DTO.UserDTO;
 import com.motorals.motorals_backend.Entity.Bike;
+import com.motorals.motorals_backend.Entity.Booking;
 import com.motorals.motorals_backend.Entity.Category;
 import com.motorals.motorals_backend.Repository.BikeRepository;
+import com.motorals.motorals_backend.Repository.BookingRepository;
 import com.motorals.motorals_backend.Repository.CategoryRepository;
+import com.motorals.motorals_backend.Repository.UserRepository;
 import com.motorals.motorals_backend.Service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,6 +33,8 @@ public class AdminController {
     private final BikeRepository bikeRepository;
     private final CategoryRepository categoryRepository;
     private final CloudinaryService cloudinaryService;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
     //admin dashboard
     @GetMapping("/dashboard")
@@ -134,6 +144,43 @@ public class AdminController {
         categoryRepository.save(category);
 
         return ResponseEntity.ok("Category added successfully");
+    }
+
+    //get all users
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO>> getUsers()
+    {
+        List<UserDTO> users= userRepository.findAll()
+                .stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getRole()
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
+    //get all bookings
+    @GetMapping("/bookings")
+    public ResponseEntity<List<BookingDTO>> getUserBookings(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        List<Booking> bookings = bookingRepository.findAll();
+
+        List<BookingDTO> result = bookings.stream()
+                .map(b -> new BookingDTO(
+                        b.getId(),
+                        b.getUser().getId(),
+                        b.getBike().getName(),
+                        b.getBike().getRegistrationNumber(),
+                        b.getStartTime(),
+                        b.getEndTime(),
+                        "Confirmed"
+                ))
+                .toList();
+
+        return ResponseEntity.ok(result);
     }
 
 
