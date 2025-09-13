@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,7 +58,6 @@ public class AdminController {
         bike.setBrand(bikeDTO.getBrand());
         bike.setModel(bikeDTO.getModel());
         bike.setRegistrationNumber(bikeDTO.getRegistrationNumber());
-        bike.setAvailable(true);
         bike.setPricePerHour(bikeDTO.getPricePerHour());
         bike.setCategory(category);
 
@@ -88,7 +89,6 @@ public class AdminController {
                 bike.getBrand(),
                 bike.getModel(),
                 bike.getRegistrationNumber(),
-                bike.isAvailable(),
                 bike.getPricePerHour(),
                 bike.getImageUrl(),
                 bike.getImagePublicId(),
@@ -111,7 +111,6 @@ public class AdminController {
         bike.setModel(bikeDTO.getModel());
         bike.setRegistrationNumber(bikeDTO.getRegistrationNumber());
         bike.setPricePerHour(bikeDTO.getPricePerHour());
-        bike.setAvailable(bikeDTO.isAvailable());
         bike.setImageUrl(bikeDTO.getImageUrl());
         bike.setCategory(category);
 
@@ -168,17 +167,33 @@ public class AdminController {
         String email = userDetails.getUsername();
         List<Booking> bookings = bookingRepository.findAll();
 
+        ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
+        LocalDateTime now = LocalDateTime.now(indiaZone);
+
         List<BookingDTO> result = bookings.stream()
-                .map(b -> new BookingDTO(
-                        b.getId(),
-                        b.getUser().getId(),
-                        b.getBike().getName(),
-                        b.getBike().getRegistrationNumber(),
-                        b.getStartTime(),
-                        b.getEndTime(),
-                        "Confirmed"
-                ))
+                .map(b -> {
+                    String status;
+                    if (b.getEndTime().isBefore(now)) {
+                        status = "Completed";
+                    } else if (b.getStartTime().isAfter(now)) {
+                        status = "Upcoming";
+                    } else {
+                        status = "Ongoing";
+                    }
+
+                    return new BookingDTO(
+                            b.getId(),
+                            b.getUser().getId(),
+                            b.getBike().getName(),
+                            b.getBike().getRegistrationNumber(),
+                            b.getStartTime(),
+                            b.getEndTime(),
+                            status,
+                            b.getTotalCost()
+                    );
+                })
                 .toList();
+
 
         return ResponseEntity.ok(result);
     }

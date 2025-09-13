@@ -1,5 +1,6 @@
 package com.motorals.motorals_backend.Controller;
 
+import com.motorals.motorals_backend.DTO.BikeDTO;
 import com.motorals.motorals_backend.DTO.BookingDTO;
 import com.motorals.motorals_backend.DTO.CreateBookingRequest;
 import com.motorals.motorals_backend.DTO.UserDTO;
@@ -10,12 +11,16 @@ import com.motorals.motorals_backend.Repository.BikeRepository;
 import com.motorals.motorals_backend.Repository.BookingRepository;
 import com.motorals.motorals_backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user")
@@ -43,17 +48,33 @@ public class UserController {
         String email = userDetails.getUsername();
         List<Booking> bookings = bookingRepository.findByUserEmail(email);
 
+        ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
+        LocalDateTime now = LocalDateTime.now(indiaZone);
+
         List<BookingDTO> result = bookings.stream()
-                .map(b -> new BookingDTO(
-                        b.getId(),
-                        b.getUser().getId(),
-                        b.getBike().getName(),
-                        b.getBike().getRegistrationNumber(),
-                        b.getStartTime(),
-                        b.getEndTime(),
-                        "Confirmed"
-                ))
+                .map(b -> {
+                    String status;
+                    if (b.getEndTime().isBefore(now)) {
+                        status = "Completed";
+                    } else if (b.getStartTime().isAfter(now)) {
+                        status = "Upcoming";
+                    } else {
+                        status = "Ongoing";
+                    }
+
+                    return new BookingDTO(
+                            b.getId(),
+                            b.getUser().getId(),
+                            b.getBike().getName(),
+                            b.getBike().getRegistrationNumber(),
+                            b.getStartTime(),
+                            b.getEndTime(),
+                            status,
+                            b.getTotalCost()
+                    );
+                })
                 .toList();
+
 
         return ResponseEntity.ok(result);
     }
@@ -62,34 +83,39 @@ public class UserController {
     @PostMapping("/bookings")
     public ResponseEntity<?> createBooking(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CreateBookingRequest request)
     {
-        User user=userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(()->new RuntimeException("User not found"));
-        Bike bike=bikeRepository.findById(request.getBikeId())
-                .orElseThrow(()->new RuntimeException("Bike not found"));
-
-        if (!bike.isAvailable())
-        {
-            ResponseEntity.badRequest().body("Bike is not available for booking");
-        }
-
-        long hours=java.time.Duration.between(request.getStartTime(), request.getEndTime()).toHours();
-        if (hours<=0)
-        {
+        if (!request.getEndTime().isAfter(request.getStartTime())) {
             return ResponseEntity.badRequest().body("Invalid booking duration");
         }
 
-        double totalCost=hours* bike.getPricePerHour();
-        Booking booking=new Booking();
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Bike bike = bikeRepository.findById(request.getBikeId())
+                .orElseThrow(() -> new RuntimeException("Bike not found"));
+
+        boolean hasConflict = bookingRepository
+                .existsByBikeIdAndStartTimeLessThanAndEndTimeGreaterThan(
+                        bike.getId(),
+                        request.getEndTime(),   // pass end first
+                        request.getStartTime()  // then start
+                );
+
+        if (hasConflict) {
+            return ResponseEntity.status(409).body("Bike is not available for the selected time window");
+        }
+
+        long hours = java.time.Duration.between(request.getStartTime(), request.getEndTime()).toHours();
+        if (hours <= 0) {
+            return ResponseEntity.badRequest().body("Invalid booking duration");
+        }
+
+        Booking booking = new Booking();
         booking.setBike(bike);
         booking.setUser(user);
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
-        booking.setTotalCost(totalCost);
+        booking.setTotalCost(hours * bike.getPricePerHour());
 
-        bike.setAvailable(false);
-        bikeRepository.save(bike);
         bookingRepository.save(booking);
-
         return ResponseEntity.ok("Bike booked successfully");
     }
 }

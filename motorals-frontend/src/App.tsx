@@ -1,27 +1,57 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Bikes from "./pages/Bikes";
-import BikeDetails from "./pages/BikesDetails";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-
+import SelectTime from "./pages/SelectTime";
+import AvailableBikes from "./pages/AvailableBikes";
+import BikeDetails from "./pages/BikesDetails";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useAppSelector } from "./app/hooks";
-import { Navigate } from "react-router-dom";
 import type { JSX } from "react";
+
+// Generic protected route
+function PrivateRoute({ children }: { children: JSX.Element }) {
+  const token = useAppSelector((s) => s.auth.token);
+  return token ? children : <Navigate to="/login" replace />;
+}
 
 // Admin route wrapper
 function AdminRoute({ children }: { children: JSX.Element }) {
-  const role = useAppSelector(s => s.auth.role);
-  return role === "ROLE_ADMIN" ? children : <Navigate to="/bikes" replace />;
+  const { token, role } = useAppSelector((s) => s.auth);
+  if (!token) return <Navigate to="/login" replace />;
+  return role === "ROLE_ADMIN" ? children : <Navigate to="/availability" replace />;
 }
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Public / user routes */}
+        {/* Public route */}
         <Route path="/login" element={<Login />} />
-        <Route path="/bikes" element={<Bikes />} />
-        <Route path="/bikes/:id" element={<BikeDetails />} />
+
+        {/* Protected user routes */}
+        <Route
+          path="/availability"
+          element={
+            <PrivateRoute>
+              <SelectTime />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/available-bikes"
+          element={
+            <PrivateRoute>
+              <AvailableBikes />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/bikes/:id"
+          element={
+            <PrivateRoute>
+              <BikeDetails />
+            </PrivateRoute>
+          }
+        />
 
         {/* Admin route */}
         <Route
@@ -33,7 +63,7 @@ export default function App() {
           }
         />
 
-        {/* Default / redirect */}
+        {/* Default redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

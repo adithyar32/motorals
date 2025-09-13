@@ -19,7 +19,6 @@ public class Bike {
     private String model;
     private String brand;
     private String registrationNumber;
-    private boolean available;
     private double pricePerHour;
 
     @ManyToOne

@@ -2,14 +2,16 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/api/axios";
 import type { Bike } from "./bikeTypes";
 
-export const fetchBikes = createAsyncThunk<Bike[]>(
-  "bikes/fetchAll",
-  async (_, { rejectWithValue }) => {
+export const fetchAvailableBikes = createAsyncThunk(
+  "bikes/fetchAvailable",
+  async ({ startTime, endTime }: { startTime: string; endTime: string }, thunkAPI) => {
     try {
-      const { data } = await api.get<Bike[]>("/api/bikes");
-      return data;
+      const res = await api.get(`/api/bikes/available`, {
+        params: { startTime, endTime }
+      });
+      return res.data as Bike[];
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message || "Failed to load bikes");
+      return thunkAPI.rejectWithValue(err.response?.data || "Failed to fetch available bikes.....Login again");
     }
   }
 );

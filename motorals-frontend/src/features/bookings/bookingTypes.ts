@@ -3,8 +3,8 @@ export interface Booking {
   userId: number;
   bikeModel: string;           
   registrationNumber: string;
-  startDate: string;         
-  endDate: string;
+  startTime: string;         
+  endTime: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   totalCost?: number;
 }

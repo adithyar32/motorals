@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { BikesState } from "./bikeTypes";
-import { fetchBikes, fetchBikeById, fetchBikesByCategoryId } from "./bikeApi";
+import { fetchAvailableBikes, fetchBikeById, fetchBikesByCategoryId } from "./bikeApi";
 
 const initialState: BikesState = {
   items: [],
@@ -13,19 +13,23 @@ const bikeSlice = createSlice({
   name: "bikes",
   initialState,
   reducers: {
-    clearSelected(state) { state.selected = null; },
+    clearSelected(state) {
+      state.selected = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-     
-      .addCase(fetchBikes.pending, (s) => { s.loading = true; s.error = null; })
-      .addCase(fetchBikes.fulfilled, (s, { payload }) => { s.loading = false; s.items = payload; })
-      .addCase(fetchBikes.rejected, (s, { payload }) => { s.loading = false; s.error = payload as string; })
+      // fetchAvailableBikes
+      .addCase(fetchAvailableBikes.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchAvailableBikes.fulfilled, (s, { payload }) => { s.loading = false; s.items = payload; })
+      .addCase(fetchAvailableBikes.rejected, (s, { payload }) => { s.loading = false; s.error = payload as string; })
 
+      // fetchBikeById
       .addCase(fetchBikeById.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(fetchBikeById.fulfilled, (s, { payload }) => { s.loading = false; s.selected = payload; })
       .addCase(fetchBikeById.rejected, (s, { payload }) => { s.loading = false; s.error = payload as string; })
-     
+
+      // fetchBikesByCategoryId
       .addCase(fetchBikesByCategoryId.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(fetchBikesByCategoryId.fulfilled, (s, { payload }) => { s.loading = false; s.items = payload; })
       .addCase(fetchBikesByCategoryId.rejected, (s, { payload }) => { s.loading = false; s.error = payload as string; });

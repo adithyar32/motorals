@@ -3,10 +3,10 @@ export interface Bike {
   brand: string;
   model: string;
   registrationNumber: string;
-  available: boolean;
   pricePerHour: number;
-  category: string;     // category name from backend
-  imageUrl?: string | null;
+  category: string;
+  imageUrl: string | null;
+  imagePublicId: string | null;
 }
 
 export interface BikesState {
@@ -15,3 +15,4 @@ export interface BikesState {
   loading: boolean;
   error: string | null;
 }
+

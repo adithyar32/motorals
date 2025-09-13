@@ -12,7 +12,6 @@ public class BikeDTO {
     private String brand;
     private String model;
     private String registrationNumber;
-    private boolean available;
     private double pricePerHour;
     private String category;
     private String imageUrl;

@@ -1,13 +1,19 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { fetchBikes } from "@/features/bikes/bikeApi";
+import { fetchAvailableBikes } from "@/features/bikes/bikeApi";
 import { Link } from "react-router-dom";
 
 export default function Bikes() {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector(s => s.bikes);
 
-  useEffect(() => { dispatch(fetchBikes()); }, [dispatch]);
+useEffect(() => {
+  const startTime = "2025-09-05T10:00:00";
+  const endTime = "2025-09-05T18:00:00";
+
+  dispatch(fetchAvailableBikes({ startTime, endTime }));
+}, [dispatch]);
+
 
   if (loading) return <p className="p-6">Loading...</p>;
   if (error) return <p className="p-6 text-red-600">{error}</p>;
@@ -24,9 +30,6 @@ export default function Bikes() {
             />
             <h3 className="font-semibold">{b.brand} {b.model}</h3>
             <p className="text-sm opacity-70">{b.category} • ₹{b.pricePerHour}/hr</p>
-            <p className={`text-sm mt-1 ${b.available ? "text-green-600" : "text-gray-500"}`}>
-              {b.available ? "Available" : "Unavailable"}
-            </p>
           </div>
         </Link>
       ))}

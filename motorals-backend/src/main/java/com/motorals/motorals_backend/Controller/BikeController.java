@@ -3,13 +3,15 @@ package com.motorals.motorals_backend.Controller;
 import com.motorals.motorals_backend.DTO.BikeDTO;
 import com.motorals.motorals_backend.Entity.Bike;
 import com.motorals.motorals_backend.Repository.BikeRepository;
+import com.motorals.motorals_backend.Repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ import java.util.List;
 public class BikeController {
 
     private final BikeRepository bikeRepository;
+    private final BookingRepository bookingRepository;
 
     //fetch all bikes
     @GetMapping
@@ -29,7 +32,6 @@ public class BikeController {
                         bike.getBrand(),
                         bike.getModel(),
                         bike.getRegistrationNumber(),
-                        bike.isAvailable(),
                         bike.getPricePerHour(),
                         bike.getCategory().getName(),
                         bike.getImageUrl(),
@@ -51,7 +53,6 @@ public class BikeController {
         result.setModel(bike.getModel());
         result.setBrand(bike.getBrand());
         result.setRegistrationNumber(bike.getRegistrationNumber());
-        result.setAvailable(bike.isAvailable());
         result.setPricePerHour(bike.getPricePerHour());
         result.setCategory(bike.getCategory().getName());
         result.setImageUrl(bike.getImageUrl());
@@ -75,7 +76,6 @@ public class BikeController {
                         bike.getBrand(),
                         bike.getModel(),
                         bike.getRegistrationNumber(),
-                        bike.isAvailable(),
                         bike.getPricePerHour(),
                         bike.getCategory().getName(),
                         bike.getImageUrl(),
@@ -84,5 +84,35 @@ public class BikeController {
 
         return ResponseEntity.ok(bikes);
     }
+
+    //get all bikes available at specific time interval
+    @GetMapping("/available")
+    public ResponseEntity<List<BikeDTO>> getAvailableBikes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+    ) {
+        List<Bike> allBikes = bikeRepository.findAll();
+
+        List<BikeDTO> availableBikes = allBikes.stream()
+                .filter(bike -> bookingRepository
+                        .findByBikeIdAndStartTimeLessThanAndEndTimeGreaterThan(
+                                bike.getId(), endTime, startTime
+                        ).isEmpty()
+                )
+                .map(bike -> new BikeDTO(
+                        bike.getId(),
+                        bike.getBrand(),
+                        bike.getModel(),
+                        bike.getRegistrationNumber(),
+                        bike.getPricePerHour(),
+                        bike.getCategory().getName(),
+                        bike.getImageUrl(),
+                        bike.getImagePublicId()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(availableBikes);
+    }
+
 
 }

@@ -15,7 +15,8 @@ public class BookingDTO {
     private Long userId;
     private String bikeModel;
     private String registrationNumber;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private String status;
+    private double totalCost;
 }
